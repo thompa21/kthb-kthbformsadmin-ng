@@ -1,0 +1,148 @@
+<!-- Inforruta, svar från API-->
+<div *ngIf="backendresponse" class="alert alert-success">
+  <div class="card-body">
+    <h3>
+      {{language=='swedish' ? formdata.postresponsetext.swedish : formdata.postresponsetext.english}}
+    </h3>
+    <div>
+      {{backendresult | json}}
+    </div>
+  </div>
+</div>
+<!-- Om formuläret initierats -->
+<div *ngIf="init">
+  <!-- Informationstext/Beskrivning -->
+  <div *ngIf="status=='closed'" style="margin-bottom:15px">
+    {{language=='swedish' ? description.closed.swedish : description.closed.english}}
+  </div>
+  <div *ngIf="status=='open'">
+    <div style="margin-bottom:15px">{{language=='swedish' ? description.open.swedish : description.open.english}}</div>
+    <!-- Eventuellt meddelande om att fält är ogilitga/inte ifyllda -->
+    <div class="webform message">
+      <div *ngIf="showtoperrormessage" id="formd_error_message" class="alert alert-danger"><p>Formuläret är inte korrekt ifyllt! Se rödmarkerad text nedan.</p>
+      </div>
+    </div>
+    <!-- Formuläret -->
+    <div id="form_body">
+      <!-- OpenUrl-ruta-->
+      <div *ngIf="isopenurl">
+        <label>{{language=='swedish' ? openurlboxlabel.swedish : openurlboxlabel.english}}</label>
+        <div class="card">
+          <div class="card-body">
+            <div *ngFor="let parameter of openurlparameters">
+              <div *ngIf="openurljson[parameter.name[openurlsource]]">
+                <strong>{{language=='swedish' ? parameter.label.swedish: parameter.label.english}}:</strong> {{openurljson[parameter.name[openurlsource]]}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <form novalidate (ngSubmit)="onSubmit(form.value)" [formGroup]="form">
+        <div style="margin-bottom:15px" *ngFor="let prop of objectFormfields">
+          <div *ngIf="prop.enabled && !prop.hidden">
+            <!-- Label för varje fält, inte fet stil om fält ingår i gruppering, visa inte för checkbox och informationbox -->
+            <label *ngIf="prop.type!='checkbox' && prop.type!='informationbox'" [ngStyle]="prop.isgrouped ? {'margin-top':'0px','font-weight': 'normal'} : {'margin-top':'0px','font-weight': 'bold'}" [attr.for]="prop.key">
+              {{language=='swedish' ? prop.label.swedish : prop.label.english}}
+              <!-- Fält valfritt? -->
+              <span style="font-style:italic;font-weight:normal">
+                {{!prop.validation.required.value && language=='swedish' ? '(' + optionalfieldtext.swedish + ')': ''}}{{!prop.validation.required.value && language=='english' ? '(' + optionalfieldtext.english + ')' : ''}}
+              </span>
+            </label>
+            <!-- Felmeddelanden vid ogiltigt/inte ifyllt -->
+            <div class="error" *ngIf="form.get(prop.key).invalid && (form.get(prop.key).dirty || form.get(prop.key).touched)">
+              <div *ngIf="form.get(prop.key).errors.required">
+                {{language=='swedish' ? prop.label.swedish : prop.label.english}} {{ language=='swedish' ? prop.validation.required.errormessage.swedish : prop.validation.required.errormessage.english }}
+              </div>
+              <div *ngIf="form.get(prop.key).errors.pattern">
+                {{language=='swedish' ? prop.label.swedish : prop.label.english}} {{ language=='swedish' ? prop.validation.pattern.errormessage.swedish : prop.validation.pattern.errormessage.english }}
+              </div>
+            </div>
+            <!-- Om placement=after -->
+            <!-- Eventuell extra information/beskrivning-->
+            <div *ngIf="prop.description && prop.description.placement=='before'">
+                {{language=='swedish' ? prop.description.swedish : prop.description.english}}
+            </div>
+            <!-- Eventuell länk-->
+            <div style="margin-bottom:10px" *ngIf="prop.link && prop.link.placement=='before'">
+                <a target="_new" href="{{language=='swedish' ? prop.link.swedish.url : prop.link.english.url}}">
+                    {{language=='swedish' ? prop.link.swedish.text : prop.link.english.text}}
+                </a>
+            </div>
+            <!-- Fälten -->
+            <div [ngSwitch]="prop.type">
+              <input style="margin-top:0px;" class="form-control medium" *ngSwitchCase="'text'" 
+                [formControlName]="prop.key"
+                [id]="prop.key" [type]="prop.type">
+
+              <input style="margin-top:0px;" class="form-control medium" *ngSwitchCase="'password'" 
+                [formControlName]="prop.key"
+                [id]="prop.key" [type]="prop.type">
+              
+              <div *ngSwitchCase="'textarea'">
+                <textarea class="form-control medium" [formControlName]="prop.key" [id]="prop.key"></textarea>
+              </div>
+              
+              <!-- Använd grupperingsfält som label for checkbox -->
+              <div *ngSwitchCase="'checkbox'">
+                  <label style="margin-top:0px;font-weight: normal;">
+                    <input (change)="checkboxchange(prop.key)"
+                      type="checkbox"
+                      [name]="prop.key"
+                      [formControlName]="prop.key"
+                      [value]=""> {{language=='swedish' ? prop.label.swedish : prop.label.english}}
+                  </label>
+              </div>
+
+              <div *ngSwitchCase="'radio'">
+                <div *ngFor="let option of prop.options">
+                  <label style="margin-top:0px;font-weight: normal;" *ngIf="option.enabled">
+                    <input (change)="onchangeformobject(this,prop.key)"
+                      type="radio"
+                      [name]="prop.key"
+                      [formControlName]="prop.key"
+                      [value]="option.value"> {{language=='swedish' ? option.label.swedish : option.label.english}}
+                  </label>
+                </div>
+              </div>
+
+              <div *ngSwitchCase="'select'">
+                <select [formControlName]="prop.key">
+                  <option *ngFor="let option of prop.options" [value]="option.value">
+                    {{ language=='swedish' ? option.label.swedish : option.label.english}}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <!-- Om placement=after, border om det är en informationsbox-->
+            <div [ngStyle]="prop.type=='informationbox' ? {'border': '1px solid', 'padding': '5px'} : {}">
+                <!-- Eventuell extra information/beskrivning-->
+                <div *ngIf="prop.description && prop.description.placement=='after'">
+                    {{language=='swedish' ? prop.description.swedish : prop.description.english}}
+                </div>
+                <!-- Eventuell länk-->
+                <div style="margin-bottom:10px" *ngIf="prop.link && prop.link.placement=='after'">
+                    <a target="_new" href="{{language=='swedish' ? prop.link.swedish.url : prop.link.english.url}}">
+                        {{language=='swedish' ? prop.link.swedish.text : prop.link.english.text}}
+                    </a>
+                </div>
+              </div>
+          </div>          
+        </div>
+        <!-- Skickaknapp -->
+        <div class="controls">
+          <input [disabled]="!form.valid" class="form-control btn-success" type="submit" value="Skicka">
+        </div>
+      </form>
+      <div>
+    <div>
+  </div>  
+  <!-- Nedan endast för development-->
+  <div style="clear:both">
+  <br/>
+  <strong>Formulärvärden</strong>
+  <pre>{{ form.value | json }}</pre>
+  <pre>{{ openurljson | json }}</pre>
+  <strong>Formulär är giltigt:</strong> {{form.valid}}
+  <!--div [(ngModel)]="formdata"></div-->
+  <pre>{{ formdata | json }}</pre>
+  </div>
