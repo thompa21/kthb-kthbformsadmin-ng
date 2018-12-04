@@ -143,6 +143,6 @@
   <pre>{{ form.value | json }}</pre>
   <pre>{{ openurljson | json }}</pre>
   <strong>Formulär är giltigt:</strong> {{form.valid}}
-  <!--div [(ngModel)]="formdata"></div-->
-  <pre>{{ formdata | json }}</pre>
+  <textarea [(ngModel)]="formdata.description.open.english"></textarea>
+  <pre>{{ formdata.description.open.swedish }}</pre>
   </div>

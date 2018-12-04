@@ -46,9 +46,9 @@ export class EditFormComponent implements OnInit {
    * Hämta rätt formulärdata från JSON beroende på angivet formid i app-root attribute
    */
   async getFormData() {
-    this.formdatajson = await this.http.get("https://apps.lib.kth.se/webservices/kthbforms/api/v1/forms/1").toPromise();
+    //this.formdatajson = await this.http.get("https://apps.lib.kth.se/webservices/kthbforms/api/v1/forms/1").toPromise();
     this.formdata = JSON.parse(this.formdatajson.json);
-    console.log(this.formdata);
+    console.log(this.formdatajson);
     this.setTitle(this.formdata.header.swedish);
     this.optionalfieldtext = this.formdata.optionalfieldtext;
     this.openurlboxlabel = this.formdata.openurlboxlabel;
@@ -107,8 +107,13 @@ export class EditFormComponent implements OnInit {
     };
   }
 
-  ngOnInit() {
+  async getform(){
+    this.formdatajson = await this.http.get("https://apps.lib.kth.se/webservices/kthbforms/api/v1/forms/1").toPromise();
     this.getFormData();
+  }
+  ngOnInit() {
+    this.getform();
+    
   }
 
   /**
